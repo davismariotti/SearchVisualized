@@ -1,0 +1,32 @@
+#maincanvas {
+    border-width: 1px;
+    border-color: #189dfe;
+    border-style: solid;
+}
+
+#walls {
+    background-color: #A9A9A9;
+}
+
+#open {
+    background-color: #45AAB8;
+}
+
+#start {
+    background-color: #98FB98;
+}
+
+#goal {
+    background-color: #FF5C5C;
+}
+
+.activeborder {
+    border-width: 2px;
+    border-color: #000000;
+    border-style: solid;
+}
+
+button:focus, button:active {
+    outline: none !important;
+    box-shadow: none;
+}
