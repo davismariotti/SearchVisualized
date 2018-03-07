@@ -16,6 +16,12 @@ const COLUMN_WIDTH = 14;
 const ROWS = 50;
 const ROW_HEIGHT = 14;
 
+var dragging = false;
+var mouseIsDown = false;
+var drawing = WALL;
+var goal = {x: 5, y: 5};
+var start = {x: 45, y: 45};
+
 var grid = new Array();
 
 for (var i = 0; i < COLUMNS; i++) {
@@ -24,6 +30,9 @@ for (var i = 0; i < COLUMNS; i++) {
         grid[i][j] = OPEN;//Math.floor(Math.random() * Math.floor(5));
     }
 }
+
+grid[start.x][start.y] = START;
+grid[goal.x][goal.y] = GOAL;
 
 function getNeighbors(x, y) {
     var neighbors = new Array();
@@ -100,11 +109,6 @@ function getBoxFromEvent(canvas, event) {
     return {x: realX, y: realY};
 }
 
-var dragging = false;
-var mouseIsDown = false;
-var drawing = WALL;
-var goal = {x: 0, y: 0};
-var start = {x: 0, y: 0};
 
 $(function() {
     var $canvas = $("#maincanvas")[0];
@@ -135,11 +139,6 @@ $(function() {
                 goal = coord;
                 grid[coord.x][coord.y] = GOAL;
                 break;
-        }
-        var neighbors = getNeighbors(coord.x, coord.y);
-        for (var i = 0; i < neighbors.length; i++) {
-            console.log(neighbors[i]);
-            grid[neighbors[i].x][neighbors[i].y] = drawing;
         }
         drawGrid($canvas);
     }).on('mousemove', function(e) {
