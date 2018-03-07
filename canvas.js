@@ -25,6 +25,23 @@ for (var i = 0; i < COLUMNS; i++) {
     }
 }
 
+function getNeighbors(x, y) {
+    var neighbors = new Array();
+    if (x != 0) {
+        neighbors.push({x: x - 1, y: y, type: grid[x-1][y]});
+    }
+    if (x != (COLUMNS - 1)) {
+        neighbors.push({x: x + 1, y: y, type: grid[x+1][y]});
+    }
+    if (y != 0) {
+        neighbors.push({x: x, y: y - 1, type: grid[x][y-1]});
+    }
+    if (y != (ROWS - 1)) {
+        neighbors.push({x: x, y: y + 1, type: grid[x][y+1]});
+    }
+    return neighbors;
+}
+
 function drawGrid(canvas) {
     var ctx = canvas.getContext("2d");
     for (var i = 0; i < COLUMNS; i++) {
@@ -119,6 +136,11 @@ $(function() {
                 grid[coord.x][coord.y] = GOAL;
                 break;
         }
+        var neighbors = getNeighbors(coord.x, coord.y);
+        for (var i = 0; i < neighbors.length; i++) {
+            console.log(neighbors[i]);
+            grid[neighbors[i].x][neighbors[i].y] = drawing;
+        }
         drawGrid($canvas);
     }).on('mousemove', function(e) {
         dragging = true;
@@ -174,13 +196,5 @@ $(function() {
         $("#start").removeClass("activeborder");
         $("#goal").addClass("activeborder");
     });
-
-
-
-
-
-
-
-
 
 });
