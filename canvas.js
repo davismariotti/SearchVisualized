@@ -16,23 +16,22 @@ const COLUMN_WIDTH = 14;
 const ROWS = 50;
 const ROW_HEIGHT = 14;
 
-var dragging = false;
 var mouseIsDown = false;
 var drawing = WALL;
-var goal = {x: 5, y: 5};
-var start = {x: 45, y: 45};
+var goal_node = {x: 5, y: 5};
+var start_node = {x: 45, y: 45};
 
 var grid = new Array();
 
 for (var i = 0; i < COLUMNS; i++) {
     grid[i] = new Array();
     for (var j = 0; j < ROWS; j++) {
-        grid[i][j] = OPEN;//Math.floor(Math.random() * Math.floor(5));
+        grid[i][j] = OPEN;
     }
 }
 
-grid[start.x][start.y] = START;
-grid[goal.x][goal.y] = GOAL;
+grid[start_node.x][start_node.y] = START;
+grid[goal_node.x][goal_node.y] = GOAL;
 
 function getNeighbors(x, y) {
     var neighbors = new Array();
@@ -95,6 +94,14 @@ function drawGrid(canvas) {
     }
 }
 
+function setBoxType(x, y, type) {
+    grid[x][y] = type;
+}
+
+function getBoxType(x, y) {
+    return grid[x][y];
+}
+
 function getBoxFromEvent(canvas, event) {
     let bound = canvas.getBoundingClientRect();
 
@@ -109,13 +116,53 @@ function getBoxFromEvent(canvas, event) {
     return {x: realX, y: realY};
 }
 
+function bfs(canvas) {
+    var queue = [start_node];
+    var visited = new Set();
+
+    var timer = setInterval(function() {
+        if (queue.length == 0) {
+            clearInterval(timer);
+        }
+        var vertex = queue.shift();
+
+        var neighbors = getNeighbors(vertex.x, vertex.y);
+        for (var i = 0; i < neighbors.length; i++) {
+            var neighbor = neighbors[i];
+            var neighbor_node = {x: neighbor.x, y: neighbor.y};
+            if (!visited.has(neighbor_node)) {
+                if (neighbor.type == OPEN) {
+                    visited.add({x: neighbor.x, y: neighbor.y});
+                    queue.push(neighbor_node);
+                    setBoxType(neighbor_node.x, neighbor_node.y, EXPLORED);
+                    drawGrid(canvas);
+                } else if (neighbor.type == GOAL) {
+                    clearInterval(timer);
+                }
+            }
+        }
+    }, 10);
+}
 
 $(function() {
     var $canvas = $("#maincanvas")[0];
     drawGrid($canvas);
 
+    $("#run").click(function() {
+        var algo = $("#algorithm").val();
+        if (algo == "bfs") {
+            console.log("Algorithm", "BFS");
+            bfs($canvas);
+        } else if (algo == "dfs") {
+            console.log("Algorithm", "DFS");
+        } else if (algo == "astar") {
+            console.log("Algorithm", "A*");
+        }
+    });
+
+
+
     $("#maincanvas").on('mousedown', function(e) {
-        dragging = false;
         mouseIsDown = true;
         var coord = getBoxFromEvent($canvas, e);
         switch (drawing) {
@@ -130,19 +177,18 @@ $(function() {
                 }
                 break;
             case START:
-                grid[start.x][start.y] = OPEN;
-                start = coord;
+                grid[start_node.x][start_node.y] = OPEN;
+                start_node = coord;
                 grid[coord.x][coord.y] = START;
                 break;
             case GOAL:
-                grid[goal.x][goal.y] = OPEN;
-                goal = coord;
+                grid[goal_node.x][goal_node.y] = OPEN;
+                goal_node = coord;
                 grid[coord.x][coord.y] = GOAL;
                 break;
         }
         drawGrid($canvas);
     }).on('mousemove', function(e) {
-        dragging = true;
         if (mouseIsDown && (drawing == WALL || drawing == OPEN)) {
             var coord = getBoxFromEvent($canvas, e);
             if (grid[coord.x][coord.y] == OPEN || grid[coord.x][coord.y] == WALL) {
@@ -156,8 +202,6 @@ $(function() {
         }
     }).on('mouseup', function(e) {
         mouseIsDown = false;
-        var wasDragging = dragging;
-        dragging = false;
     });
 
     $(document).on('mouseup', function() {
