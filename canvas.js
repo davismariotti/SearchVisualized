@@ -50,6 +50,17 @@ function getNeighbors(x, y) {
     return neighbors;
 }
 
+function resetGrid(canvas) {
+    for (var i = 0; i < COLUMNS; i++) {
+        for (var j = 0; j < ROWS; j++) {
+            if (grid[i][j] == EXPLORED) {
+                grid[i][j] = OPEN;
+            }
+        }
+    }
+    drawGrid(canvas);
+}
+
 function drawGrid(canvas) {
     var ctx = canvas.getContext("2d");
     for (var i = 0; i < COLUMNS; i++) {
@@ -133,11 +144,80 @@ function bfs(canvas) {
             if (!visited.has(neighbor_node)) {
                 if (neighbor.type == OPEN) {
                     visited.add({x: neighbor.x, y: neighbor.y});
-                    queue.push(neighbor_node);
+                    if (!queue.includes(neighbor_node)) {
+                        queue.push(neighbor_node);
+                    }
                     setBoxType(neighbor_node.x, neighbor_node.y, EXPLORED);
                     drawGrid(canvas);
                 } else if (neighbor.type == GOAL) {
                     clearInterval(timer);
+                }
+            }
+        }
+    }, 10);
+}
+
+function dfs(canvas) {
+    var queue = [start_node]
+    var visited = new Set();
+
+    var timer = setInterval(function() {
+        if (queue.length == 0) {
+            clearInterval(timer);
+        }
+        var vertex = queue.pop();
+
+        var neighbors = getNeighbors(vertex.x, vertex.y);
+        for (var i = 0; i < neighbors.length; i++) {
+            var neighbor = neighbors[i];
+            var neighbor_node = {x: neighbor.x, y: neighbor.y};
+            if (!visited.has(neighbor_node)) {
+                if (neighbor.type == OPEN) {
+                    visited.add({x: neighbor.x, y: neighbor.y});
+                    if (!queue.includes(neighbor_node)) {
+                        queue.push(neighbor_node);
+                    }
+                    setBoxType(neighbor_node.x, neighbor_node.y, EXPLORED);
+                    drawGrid(canvas);
+                } else if (neighbor.type == GOAL) {
+                    clearInterval(timer);
+                }
+            }
+        }
+    }, 10);
+}
+
+function hueristic(x, y) {
+    return Math.pow(goal_node.x - x, 2) + Math.pow(goal_node.y - y, 2);
+}
+
+function astar(canvas) {
+    //var queue = [start_node]
+    var visited = new Set();
+    var queue = new PriorityQueue(function(a, b) {
+        return hueristic(b.x, b.y) - hueristic(a.x, a.y);
+    });
+    queue.enq(start_node);
+
+    var timer = setInterval(function() {
+        if (queue.isEmpty()) {
+            clearInterval(timer);
+        } else {
+            var vertex = queue.deq();
+
+            var neighbors = getNeighbors(vertex.x, vertex.y);
+            for (var i = 0; i < neighbors.length; i++) {
+                var neighbor = neighbors[i];
+                var neighbor_node = {x: neighbor.x, y: neighbor.y};
+                if (!visited.has(neighbor_node)) {
+                    if (neighbor.type == OPEN) {
+                        visited.add({x: neighbor.x, y: neighbor.y});
+                        queue.enq(neighbor_node);
+                        setBoxType(neighbor_node.x, neighbor_node.y, EXPLORED);
+                        drawGrid(canvas);
+                    } else if (neighbor.type == GOAL) {
+                        clearInterval(timer);
+                    }
                 }
             }
         }
@@ -155,12 +235,16 @@ $(function() {
             bfs($canvas);
         } else if (algo == "dfs") {
             console.log("Algorithm", "DFS");
+            dfs($canvas);
         } else if (algo == "astar") {
             console.log("Algorithm", "A*");
+            astar($canvas);
         }
     });
 
-
+    $("#reset").click(function() {
+        resetGrid($canvas);
+    });
 
     $("#maincanvas").on('mousedown', function(e) {
         mouseIsDown = true;
